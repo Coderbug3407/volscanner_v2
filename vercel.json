@@ -2,9 +2,5 @@
   "version": 2,
   "functions": {
     "api/*.js": { "maxDuration": 60 }
-  },
-  "crons": [
-    { "path": "/api/scan",        "schedule": "5 * * * *" },
-    { "path": "/api/alert-check", "schedule": "0 * * * *" }
-  ]
+  }
 }
