@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binance Vol Scanner</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap');
+:root{--bg:#050a0e;--sur:#0d1821;--brd:#1a2e42;--acc:#00d4ff;--acc2:#00ff94;--red:#ff3860;--grn:#00ff94;--txt:#e2eaf0;--mut:#5a7a94;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.w{max-width:1400px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+header{padding:18px 0 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-ico{width:34px;height:34px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.logo h1{font-family:var(--mono);font-size:14px;color:var(--acc);letter-spacing:.06em}
+.logo span{display:block;font-size:11px;color:var(--mut);font-weight:300}
+.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--mut);padding:4px 10px;background:var(--sur);border:1px solid var(--brd);border-radius:100px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc2);box-shadow:0 0 8px var(--acc2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn{padding:7px 14px;border-radius:6px;border:none;font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s}
+.btn-p{background:var(--acc);color:var(--bg);font-weight:700}
+.btn-p:hover{background:#00b8d9}
+.btn-g{background:#0d2a0d;color:var(--grn);border:1px solid rgba(0,255,148,.4);font-weight:700}
+.btn-g:hover{background:#102e10}
+.exp-bar{padding:10px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--brd)}
+.exp-lbl{font-family:var(--mono);font-size:11px;color:var(--mut)}
+select{background:var(--sur);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;color:var(--txt);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer}
+.ctrl{padding:12px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flbl{font-size:11px;color:var(--mut);font-family:var(--mono)}
+input{background:var(--sur);border:1px solid var(--brd);border-radius:6px;padding:7px 11px;color:var(--txt);font-family:var(--mono);font-size:12px;outline:none;width:170px;transition:border-color .2s}
+input:focus{border-color:var(--acc)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px}
+.sc{background:var(--sur);border:1px solid var(--brd);border-radius:10px;padding:13px}
+.sc-lbl{font-size:10px;color:var(--mut);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.sc-v{font-size:20px;font-family:var(--mono);font-weight:700;color:var(--acc)}
+.pos{color:var(--grn)}.neg{color:var(--red)}
+.tbl-wrap{background:var(--sur);border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.tbl-top{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd)}
+.tbl-tit{font-family:var(--mono);font-size:12px;color:var(--acc)}
+.badge{font-family:var(--mono);font-size:11px;color:var(--mut);background:var(--bg);padding:3px 7px;border-radius:4px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 13px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--brd);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{color:var(--acc)}
+tbody tr{border-bottom:1px solid rgba(26,46,66,.5);transition:background .15s}
+tbody tr:hover{background:rgba(0,212,255,.04)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 13px;font-size:12px;white-space:nowrap}
+.td-s{font-family:var(--mono);font-weight:700}
+.td-s span{font-weight:400;color:var(--mut);font-size:10px}
+.td-v,.td-c,.td-p{font-family:var(--mono)}
+.td-c{font-weight:700}
+.td-p{font-size:11px;color:var(--mut)}
+.rk{font-family:var(--mono);font-size:10px;color:var(--mut)}
+.vbw{display:flex;align-items:center;gap:6px}
+.vb{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--acc),var(--acc2));min-width:2px}
+.loading{text-align:center;padding:50px;font-family:var(--mono);color:var(--mut);font-size:12px}
+.spin{width:26px;height:26px;border:2px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{text-align:center;padding:30px;color:var(--red);font-family:var(--mono);font-size:12px}
+footer{padding:18px 0;text-align:center;font-size:11px;color:var(--mut);font-family:var(--mono);border-top:1px solid var(--brd);margin-top:20px}
+</style>
+</head>
+<body>
+<div class="w">
+<header>
+  <div class="logo">
+    <div class="logo-ico">📊</div>
+    <div><h1>VOL SCANNER</h1><span>Binance USDT · Auto-refresh 5m</span></div>
+  </div>
+  <div class="hdr-r">
+    <div class="pill"><div class="dot"></div>LIVE</div>
+    <div class="pill" id="upd">--:--</div>
+    <button class="btn btn-p" onclick="loadData()">⟳ Refresh</button>
+  </div>
+</header>
+
+<div class="exp-bar">
+  <span class="exp-lbl">📥 XUẤT CSV:</span>
+  <select id="expDate"><option value="">-- Chọn ngày --</option></select>
+  <button class="btn btn-g" onclick="doExport()">⬇ Tải file</button>
+  <span style="font-family:var(--mono);font-size:11px" id="expSt"></span>
+</div>
+
+<div class="ctrl">
+  <span class="flbl">LỌC:</span>
+  <input type="text" id="srch" placeholder="Tìm symbol..." oninput="render()">
+  <select id="srt" onchange="render()">
+    <option value="vol">Sắp xếp: Vol 24h</option>
+    <option value="chg">Sắp xếp: Thay đổi</option>
+    <option value="sym">Sắp xếp: A-Z</option>
+  </select>
+  <select id="vf" onchange="render()">
+    <option value="0">Vol: Tất cả</option>
+    <option value="1000000">Vol > 1M</option>
+    <option value="10000000">Vol > 10M</option>
+    <option value="100000000">Vol > 100M</option>
+  </select>
+  <select id="cf" onchange="render()">
+    <option value="all">Giá: Tất cả</option>
+    <option value="up">Chỉ ↑ Tăng</option>
+    <option value="down">Chỉ ↓ Giảm</option>
+  </select>
+</div>
+
+<div class="stats">
+  <div class="sc"><div class="sc-lbl">Số cặp</div><div class="sc-v" id="sn">—</div></div>
+  <div class="sc"><div class="sc-lbl">Tổng Vol 24h</div><div class="sc-v" id="sv">—</div></div>
+  <div class="sc"><div class="sc-lbl">Tăng giá</div><div class="sc-v pos" id="su">—</div></div>
+  <div class="sc"><div class="sc-lbl">Giảm giá</div><div class="sc-v neg" id="sd">—</div></div>
+  <div class="sc"><div class="sc-lbl">TB thay đổi</div><div class="sc-v" id="sa">—</div></div>
+</div>
+
+<div class="tbl-wrap">
+  <div class="tbl-top">
+    <span class="tbl-tit">MARKET VOLUME MONITOR</span>
+    <span class="badge" id="cnt">0 cặp</span>
+  </div>
+  <div id="tbl"><div class="loading"><div class="spin"></div>Đang tải...</div></div>
+</div>
+<footer>Binance Vol Scanner · GitHub Storage · Telegram Alerts</footer>
+</div>
+<script>
+let D=[];
+const fv=v=>v>=1e9?(v/1e9).toFixed(2)+'B':v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':v.toFixed(0);
+const fp=p=>p<1e-6?p.toExponential(4):p<0.001?p.toFixed(8):p<1?p.toFixed(6):p<1000?p.toFixed(4):p.toFixed(2);
+
+async function loadData(){
+  document.getElementById('tbl').innerHTML='<div class="loading"><div class="spin"></div>Đang lấy dữ liệu...</div>';
+  try{
+    const r=await fetch('/api/dashboard');
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error||'Unknown error');
+    D=j.data; updateStats(); render();
+    document.getElementById('upd').textContent=new Date().toLocaleTimeString('vi-VN');
+  }catch(e){
+    document.getElementById('tbl').innerHTML='<div class="err">⚠ '+e.message+'</div>';
+  }
+}
+
+function updateStats(){
+  const n=D.length,tv=D.reduce((a,b)=>a+b.volume24h,0);
+  const up=D.filter(d=>d.priceChange24h>0).length,dn=D.filter(d=>d.priceChange24h<0).length;
+  const avg=D.reduce((a,b)=>a+b.priceChange24h,0)/n;
+  document.getElementById('sn').textContent=n;
+  document.getElementById('sv').textContent=fv(tv);
+  document.getElementById('su').textContent=up;
+  document.getElementById('sd').textContent=dn;
+  const el=document.getElementById('sa');
+  el.textContent=(avg>=0?'+':'')+avg.toFixed(2)+'%';
+  el.className='sc-v '+(avg>=0?'pos':'neg');
+}
+
+function render(){
+  const q=document.getElementById('srch').value.toUpperCase();
+  const s=document.getElementById('srt').value;
+  const vm=parseFloat(document.getElementById('vf').value);
+  const cf=document.getElementById('cf').value;
+  let d=[...D];
+  if(q)d=d.filter(x=>x.symbol.includes(q));
+  if(vm>0)d=d.filter(x=>x.volume24h>=vm);
+  if(cf==='up')d=d.filter(x=>x.priceChange24h>0);
+  if(cf==='down')d=d.filter(x=>x.priceChange24h<0);
+  d.sort((a,b)=>s==='sym'?a.symbol.localeCompare(b.symbol):s==='chg'?Math.abs(b.priceChange24h)-Math.abs(a.priceChange24h):b.volume24h-a.volume24h);
+  document.getElementById('cnt').textContent=d.length+' cặp';
+  if(!d.length){document.getElementById('tbl').innerHTML='<div class="loading">Không tìm thấy</div>';return;}
+  const mx=d[0].volume24h||1;
+  const rows=d.map((x,i)=>{
+    const c=x.priceChange24h>=0?'pos':'neg',sg=x.priceChange24h>=0?'+':'';
+    const bw=Math.max(3,(x.volume24h/mx)*100);
+    return '<tr><td class="rk">'+(i+1)+'</td><td class="td-s">'+x.base+'<span>/USDT</span></td>'
+      +'<td class="td-v"><div class="vbw"><div class="vb" style="width:'+bw+'px"></div>'+fv(x.volume24h)+'</div></td>'
+      +'<td class="td-c '+c+'">'+sg+x.priceChange24h.toFixed(2)+'%</td>'
+      +'<td class="td-p">'+fp(x.price)+'</td></tr>';
+  }).join('');
+  document.getElementById('tbl').innerHTML='<table><thead><tr>'
+    +'<th>#</th><th>Symbol</th>'
+    +'<th onclick="document.getElementById(\'srt\').value=\'vol\';render()">Vol 24h (USDT) ↕</th>'
+    +'<th onclick="document.getElementById(\'srt\').value=\'chg\';render()">Thay đổi ↕</th>'
+    +'<th>Giá</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+async function loadDates(){
+  try{
+    const r=await fetch('/api/export?list=1');
+    const j=await r.json();
+    const sel=document.getElementById('expDate');
+    const today=new Date(Date.now()+7*3600000).toISOString().slice(0,10);
+    sel.innerHTML='<option value="">-- Chọn ngày --</option>';
+    (j.dates&&j.dates.length?j.dates:[today]).forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d;o.textContent=d+(d===today?' (hôm nay)':'');
+      if(d===today)o.selected=true;
+      sel.appendChild(o);
+    });
+  }catch(e){console.warn(e);}
+}
+
+async function doExport(){
+  const date=document.getElementById('expDate').value||new Date(Date.now()+7*3600000).toISOString().slice(0,10);
+  const st=document.getElementById('expSt');
+  st.textContent='⏳ Đang tạo...';st.style.color='var(--acc)';
+  try{
+    const r=await fetch('/api/export?date='+date);
+    if(!r.ok)throw new Error(await r.text());
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='vol-scanner-'+date+'.csv';a.click();
+    URL.revokeObjectURL(url);
+    st.textContent='✅ Đã tải!';st.style.color='var(--grn)';
+    setTimeout(()=>st.textContent='',3000);
+  }catch(e){st.textContent='❌ '+e.message;st.style.color='var(--red)';}
+}
+
+loadData();
+loadDates();
+setInterval(loadData,5*60*1000);
+</script>
+</body>
+</html>
